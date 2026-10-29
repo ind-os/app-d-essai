@@ -8,15 +8,15 @@ import { ecrans } from '../../espace/routes.ts';
 
 afterEach(() => vi.unstubAllGlobals());
 
-const chemin = `/${nom}/entrees`;
+const chemin = `/${nom}/notes`;
 const ada: Session = {
   id: 'p1',
   email: 'ada@exemple.ch',
   nom: 'Ada',
   proprietaire: false,
   groupes: [],
-  apps: [{ nom, titre, lien: `http://localhost:3000/${nom}`, reglages: false, ecrans: [{ nom: 'entrees', titre: 'Entrées', chemin }] }],
-  barre: [{ titre: 'Entrées', chemin, app: titre }],
+  apps: [{ nom, titre, lien: `http://localhost:3000/${nom}`, reglages: false, ecrans: [{ nom: 'notes', titre: 'Notes', chemin }] }],
+  barre: [{ titre: 'Notes', chemin, app: titre }],
   theme: { nom: 'Essai', logo: false },
 };
 
@@ -45,32 +45,32 @@ function ouvrir(adresse = chemin) {
   render(<Page />);
 }
 
-test('l\'écran liste les entrées de la personne, la page dans l\'adresse', async () => {
-  const appels = servir(() => [200, resultat({ lignes: [{ id: 'e1', texte: 'Appeler le notaire', cree_le: '2026-10-28T09:00:00.000Z' }], total: 26 })]);
+test('l\'écran liste les notes de la personne, la page dans l\'adresse', async () => {
+  const appels = servir(() => [200, resultat({ lignes: [{ id: 'n1', texte: 'Appeler le notaire', cree_le: '2026-10-28T09:00:00.000Z' }], total: 26 })]);
   ouvrir(`${chemin}?page=2`);
-  expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Entrées');
+  expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Notes');
   await screen.findByText('Appeler le notaire');
   expect(screen.getByText('28.10.2026 10:00')).toBeTruthy();
   expect(appels).toContainEqual({ chemin: `/${nom}/outils/lister`, corps: { page: 2 } });
 });
 
-test('ajouter une entrée appelle l\'outil, puis relit la liste', async () => {
-  const entrees: { id: string; texte: string; cree_le: string }[] = [];
+test('ajouter une note appelle l\'outil, puis relit la liste', async () => {
+  const notes: { id: string; texte: string; cree_le: string }[] = [];
   const appels = servir((chemin, corps) => {
     if (chemin.endsWith('/outils/ajouter')) {
-      const entree = { id: `e${entrees.length + 1}`, texte: String(corps.texte), cree_le: '2026-10-28T09:00:00.000Z' };
-      entrees.unshift(entree);
-      return [200, resultat(entree)];
+      const note = { id: `n${notes.length + 1}`, texte: String(corps.texte), cree_le: '2026-10-28T09:00:00.000Z' };
+      notes.unshift(note);
+      return [200, resultat(note)];
     }
-    return [200, resultat({ lignes: entrees, total: entrees.length })];
+    return [200, resultat({ lignes: notes, total: notes.length })];
   });
   ouvrir();
-  await screen.findByText('Aucune entrée.');
-  await userEvent.type(screen.getByLabelText('Nouvelle entrée'), 'Relancer le devis');
+  await screen.findByText('Aucune note.');
+  await userEvent.type(screen.getByLabelText('Nouvelle note'), 'Relancer le devis');
   await userEvent.click(screen.getByRole('button', { name: 'Ajouter' }));
   await screen.findByText('Relancer le devis');
   expect(appels).toContainEqual({ chemin: `/${nom}/outils/ajouter`, corps: { texte: 'Relancer le devis' } });
-  expect((screen.getByLabelText('Nouvelle entrée') as HTMLInputElement).value).toBe('');
+  expect((screen.getByLabelText('Nouvelle note') as HTMLInputElement).value).toBe('');
 });
 
 test('un ajout refusé se lit sous le champ, mot pour mot', async () => {
@@ -78,8 +78,8 @@ test('un ajout refusé se lit sous le champ, mot pour mot', async () => {
     ? [422, resultat('Le texte est trop long.', true)]
     : [200, resultat({ lignes: [], total: 0 })]);
   ouvrir();
-  await screen.findByText('Aucune entrée.');
-  await userEvent.type(screen.getByLabelText('Nouvelle entrée'), 'Trop long');
+  await screen.findByText('Aucune note.');
+  await userEvent.type(screen.getByLabelText('Nouvelle note'), 'Trop long');
   await userEvent.click(screen.getByRole('button', { name: 'Ajouter' }));
   expect((await screen.findByRole('alert')).textContent).toContain('Le texte est trop long.');
 });
