@@ -5,9 +5,18 @@ import { requeteDesNotes } from '../requetes/notes.ts';
 
 const colonnes: Colonne[] = [{ titre: 'Note' }, { titre: 'Ajoutée', fixe: true }];
 
-// « Notes » : un champ pour en ajouter une, par l'outil `ajouter`, puis les notes de la
-// personne, 25 par page, par l'outil `lister`, les mêmes que pour Claude ; la page dans l'adresse.
-// Un appel refusé se lit sous le champ, mot pour mot.
+// Le nombre de notes de la personne, en toutes lettres pour zéro : « Aucune note », « 1 note »,
+// « 26 notes ».
+function nombreDeNotes(total: number): string {
+  if (total === 0) {
+    return 'Aucune note';
+  }
+  return `${total.toLocaleString('fr-CH')} ${total === 1 ? 'note' : 'notes'}`;
+}
+
+// « Notes » : sous le titre, le nombre de notes de la personne ; un champ pour en ajouter une, par
+// l'outil `ajouter`, puis ses notes, 25 par page, par l'outil `lister`, les mêmes que pour Claude ;
+// la page dans l'adresse. Un appel refusé se lit sous le champ, mot pour mot.
 export function Notes() {
   const { page, changerDePage } = usePageDeLAdresse();
   const notes = useQuery({ ...requeteDesNotes(page), placeholderData: keepPreviousData, throwOnError: true });
@@ -18,7 +27,15 @@ export function Notes() {
     heureDeSuisse(note.cree_le),
   ]);
   return (
-    <Ecran titre="Notes" presentation="Vos notes, des textes courts que vous seul voyez. Claude les lit et en ajoute quand vous le lui demandez.">
+    <Ecran
+      titre="Notes"
+      presentation={(
+        <>
+          {notes.data && <span className="mb-1 block text-encre">{nombreDeNotes(notes.data.total)}</span>}
+          Vos notes, des textes courts que vous seul voyez. Claude les lit et en ajoute quand vous le lui demandez.
+        </>
+      )}
+    >
       <form
         className="mb-5 flex flex-wrap items-end gap-2.5"
         onSubmit={(evenement) => {
