@@ -1,0 +1,7 @@
+{
+  "extends": "../node_modules/@indos/bibliotheque/tsconfig.page.json",
+  "include": [
+    "./**/*",
+    "../tests/espace/**/*"
+  ]
+}

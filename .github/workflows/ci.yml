@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  # L'image Node de l'app, celle de son Dockerfile.
+  NODE: node:24.21.0-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20
+
+jobs:
+  verifier:
+    name: Tests et image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Tests
+        run: docker run --rm -v "$PWD:/app" -w /app "$NODE" sh -c 'npm ci && npm test'
+      - name: Image
+        run: docker build --build-arg GIT_SHA="$GITHUB_SHA" .

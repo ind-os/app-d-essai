@@ -1,0 +1,21 @@
+{
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "page-de-l-espace construire",
+    "dev": "page-de-l-espace developper",
+    "start": "node src/demarrer.ts",
+    "test": "page-de-l-espace construire && tsc && tsc -p espace && node --test \"tests/**/*.test.ts\" && page-de-l-espace tester"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.3.1",
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2"
+  },
+  "dependencies": {
+    "@indos/bibliotheque": "1.0.0"
+  }
+}
