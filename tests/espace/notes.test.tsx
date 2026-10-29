@@ -45,11 +45,12 @@ function ouvrir(adresse = chemin) {
   render(<Page />);
 }
 
-test('l\'écran liste les notes de la personne, la page dans l\'adresse', async () => {
+test('l\'écran liste les notes de la personne, la page dans l\'adresse, et leur nombre sous son titre', async () => {
   const appels = servir(() => [200, resultat({ lignes: [{ id: 'n1', texte: 'Appeler le notaire', cree_le: '2026-10-28T09:00:00.000Z' }], total: 26 })]);
   ouvrir(`${chemin}?page=2`);
   expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Notes');
   await screen.findByText('Appeler le notaire');
+  expect(screen.getByText('26 notes')).toBeTruthy();
   expect(screen.getByText('28.10.2026 10:00')).toBeTruthy();
   expect(appels).toContainEqual({ chemin: `/${nom}/outils/lister`, corps: { page: 2 } });
 });
@@ -66,9 +67,11 @@ test('ajouter une note appelle l\'outil, puis relit la liste', async () => {
   });
   ouvrir();
   await screen.findByText('Aucune note.');
+  expect(screen.getByText('Aucune note')).toBeTruthy();
   await userEvent.type(screen.getByLabelText('Nouvelle note'), 'Relancer le devis');
   await userEvent.click(screen.getByRole('button', { name: 'Ajouter' }));
   await screen.findByText('Relancer le devis');
+  expect(screen.getByText('1 note')).toBeTruthy();
   expect(appels).toContainEqual({ chemin: `/${nom}/outils/ajouter`, corps: { texte: 'Relancer le devis' } });
   expect((screen.getByLabelText('Nouvelle note') as HTMLInputElement).value).toBe('');
 });
