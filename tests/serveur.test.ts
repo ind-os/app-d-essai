@@ -17,7 +17,7 @@ const ada = { id: 'p1', email: 'ada@exemple.ch', nom: 'Ada', proprietaire: true 
 const eve = { id: 'p2', email: 'eve@exemple.ch', nom: 'Eve', proprietaire: false };
 
 // L'app telle que le kit la déclare au core, avec son écran.
-const apps = [{ nom, titre, lien: `https://exemple.ch/${nom}`, ecrans: [{ nom: 'entrees', titre: 'Entrées' }] }];
+const apps = [{ nom, titre, lien: `https://exemple.ch/${nom}`, ecrans: [{ nom: 'notes', titre: 'Notes' }] }];
 
 // Démarre l'app sur une base d'essai migrée et un port libre, servie sous /<nom> comme derrière le
 // proxy et branchée au core donné, et rend son adresse, avec son chemin.
@@ -65,7 +65,7 @@ test('la racine renvoie vers l\'écran ; /sante répond ok ; une autre page est 
   for (const racine of [`${adresse}/`, `${origine}/`]) {
     const reponse = await fetch(racine, { redirect: 'manual' });
     assert.equal(reponse.status, 303);
-    assert.equal(reponse.headers.get('location'), `${adresse}/entrees`);
+    assert.equal(reponse.headers.get('location'), `${adresse}/notes`);
   }
   assert.equal(await (await fetch(`${origine}/sante`)).text(), 'ok');
   assert.equal((await fetch(`${adresse}/ailleurs`, { headers: { cookie: 'session=ada' } })).status, 404);
@@ -74,22 +74,22 @@ test('la racine renvoie vers l\'écran ; /sante répond ok ; une autre page est 
 test('l\'écran sert la page construite à une personne connectée, avec ou sans le chemin de l\'app', async (t) => {
   const adresse = await demarrer(t, await lancerLeFauxCore(t, { 'session=eve': eve }, { nom: 'Essai' }, apps));
   const origine = new URL(adresse).origin;
-  for (const ecran of [`${adresse}/entrees`, `${origine}/entrees`]) {
+  for (const ecran of [`${adresse}/notes`, `${origine}/notes`]) {
     const reponse = await fetch(ecran, { headers: { cookie: 'session=eve' } });
     assert.equal(reponse.status, 200);
     assert.equal(await reponse.text(), page);
   }
-  const sansSession = await fetch(`${adresse}/entrees`, { redirect: 'manual' });
+  const sansSession = await fetch(`${adresse}/notes`, { redirect: 'manual' });
   assert.equal(sansSession.status, 303);
   assert.match(sansSession.headers.get('location') ?? '', /\/connexion\?retour=/);
 });
 
-test('chacun ajoute et lit ses entrées, les plus récentes d\'abord, 25 par page', async (t) => {
+test('chacun ajoute et lit ses notes, les plus récentes d\'abord, 25 par page', async (t) => {
   const adresse = await demarrer(t, await lancerLeFauxCore(t));
   const deAda = await connecter(t, adresse, ada);
   const deEve = await connecter(t, adresse, eve);
   for (let rang = 1; rang <= 26; rang += 1) {
-    await appeler(deAda, 'ajouter', { texte: `Entrée ${rang}` });
+    await appeler(deAda, 'ajouter', { texte: `Note ${rang}` });
   }
   const ajoutee = await appeler(deEve, 'ajouter', { texte: '  La seule d\'Eve  ' });
   assert.equal(ajoutee.texte, 'La seule d\'Eve');
@@ -97,9 +97,9 @@ test('chacun ajoute et lit ses entrées, les plus récentes d\'abord, 25 par pag
   const premiere = await appeler(deAda, 'lister', {});
   assert.equal(premiere.total, 26);
   assert.equal(premiere.lignes.length, 25);
-  assert.equal(premiere.lignes[0].texte, 'Entrée 26');
+  assert.equal(premiere.lignes[0].texte, 'Note 26');
   const seconde = await appeler(deAda, 'lister', { page: 2 });
-  assert.deepEqual(seconde.lignes.map((entree: { texte: string }) => entree.texte), ['Entrée 1']);
+  assert.deepEqual(seconde.lignes.map((note: { texte: string }) => note.texte), ['Note 1']);
   assert.deepEqual(await appeler(deEve, 'lister', {}), { lignes: [ajoutee], total: 1 });
 
   const vide = await deEve.callTool({ name: 'ajouter', arguments: { texte: '' } });
